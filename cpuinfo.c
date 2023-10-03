@@ -17,7 +17,7 @@ int main(int argc, char **argv)
             path = optarg;
             break;
         default:
-            fprintf(stderr, "Usage: %s -f /proc/cpuinfo\n", argv[0]);
+            fprintf(stderr, "Usage: -f /proc/cpuinfo\n");
             exit(1);
         }
     }
