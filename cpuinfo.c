@@ -42,13 +42,19 @@ int main(int argc, char **argv)
         perror("Error opening /proc/cpuinfo");
         return 1;
     }
-
-    char line[300];
-    while (fgets(line, sizeof(line), file))
+    char *line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+    while ((linelen = getline(&line, &linecap, fp)) > 0)
     {
-        // Process each line in /proc/cpuinfo here
-        printf("%s", line);
-    }
+        }
+
+    // char line[300];
+    // while (fgets(line, sizeof(line), file))
+    // {
+    //     // Process each line in /proc/cpuinfo here
+    //     printf("%s", line);
+    // }
 
     // If the file can be closed, close it
     if ((fclose(file)) != 0)
