@@ -24,10 +24,11 @@ int main(int argc, char **argv)
 
     if (path == NULL)
     {
-        fprintf(stderr, "You must provide the -f option with /proc/cpuinfo\n");
+        fprintf(stderr, "You must provide the -f falg with /proc/cpuinfo\n");
         exit(1);
     }
 
+    // More of a personal test
     if (strcmp(path, "/proc/cpuinfo") != 0)
     {
         fprintf(stderr, "Invalid file path. Use /proc/cpuinfo\n");
