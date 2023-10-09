@@ -9,7 +9,7 @@ int main(int argc, char **argv)
     char *path = NULL;
 
     // Use getopt to parse command line options
-    while ((opt = getopt(argc, argv, "m:")) != -1)
+    while ((opt = getopt(argc, argv, "f:")) != -1)
     {
         switch (opt)
         {
