@@ -1,9 +1,9 @@
 
-output: cpuinfo.o 
-	gcc cpuinfo.o -o output
+output: MYps.o 
+	gcc MYps.o -o output
 
-cpuinfo.o: cpuinfo.c
-	gcc -c cpuinfo.c
+cpuinfo.o: MYps.c
+	gcc -c MYps.c
 
 clean: 
 	rm *.o output
