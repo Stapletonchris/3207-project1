@@ -71,8 +71,10 @@ int main(int argc, char *argv[])
     // If no options are provided, display information for all processes of the current user
     if (!flags.p && !flags.s && !flags.U && !flags.S && !flags.c && !flags.v)
     {
-        readproc();
-        DIR *procDir = opendir("."); // Open the current working directory
+        // readproc();
+        char currentUID[32];
+        snprintf(currentUID, sizeof(currentUID), "%d", getuid());
+        DIR *procDir = opendir("/proc");
         if (procDir)
         {
             struct dirent *entry;
@@ -87,7 +89,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            perror("Current directory could not be opened.");
+            perror("procDir could not be opened.");
         }
     }
     else if (flags.p)
