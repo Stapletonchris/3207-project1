@@ -16,8 +16,18 @@ including their state, user time, system time, virtual memory,
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "flags.h"           // Structure to hold command-line flags
-#include "displayProcInfo.h" // Header file for displayProc function
+#include "readproc.h"
+
+// Structure to hold command-line flags
+struct Flags
+{
+    _Bool p;
+    _Bool s;
+    _Bool U;
+    _Bool S;
+    _Bool v;
+    _Bool c;
+};
 
 void displayProcInfo(const char *pid, struct Flags flags);
 
@@ -28,33 +38,33 @@ int main(int argc, char *argv[])
     char *path = NULL;
     int opt;
 
-    /*Parse through the command line if react to the flags
-    accordingly.*/
+    // Parse through the command line and react to the flags accordingly.
     while ((opt = getopt(argc, argv, "p:sUSvc")) != -1)
     {
         switch (opt)
         {
         case 'p':
             path = optarg;
-            flags.p = true;
+            flags.p = true; // Set the '-p' flag to indicate a specific PID is provided
             break;
         case 's':
-            flags.s = true;
+            flags.s = true; // Set the '-s' flag to indicate displaying process state
             break;
         case 'U':
-            flags.U = false;
+            flags.U = false; // Set the '-U' flag to indicate not displaying user time
             break;
         case 'S':
-            flags.S = true;
+            flags.S = true; // Set the '-S' flag to indicate displaying system time
             break;
         case 'v':
-            flags.v = true;
+            flags.v = true; // Set the '-v' flag to indicate displaying virtual memory
             break;
         case 'c':
-            flags.c = false;
+            flags.c = false; // Set the '-c' flag to indicate not displaying the command line
             break;
         default:
             fprintf(stderr, "Usage: %s -p PID -s -U -S -v -c\n", argv[0]);
+            // readproc();
             exit(0);
         }
     }
@@ -62,6 +72,7 @@ int main(int argc, char *argv[])
     // If no options are provided, display information for all processes of the current user
     if (!flags.p && !flags.s && !flags.U && !flags.S && !flags.c && !flags.v)
     {
+        readproc();
         char currentUID[32];
         snprintf(currentUID, sizeof(currentUID), "%d", getuid());
         DIR *procDir = opendir("/proc");
@@ -70,7 +81,7 @@ int main(int argc, char *argv[])
             struct dirent *entry;
             while ((entry = readdir(procDir)) != NULL)
             {
-                if (isdigit(entry->d_name[0]) && strcmp(entry->d_name, currentUID) == 0)
+                if (isdigit(entry->d_name[0]))
                 {
                     displayProcInfo(entry->d_name, flags);
                 }
@@ -93,27 +104,35 @@ int main(int argc, char *argv[])
 // Function to display process information
 void displayProcInfo(const char *pid, struct Flags flags)
 {
-    char procPath[264];
-    // check
+    char procPath[256];
+    /*Opens /proc uses PID to select the path*/
     snprintf(procPath, sizeof(procPath), "/proc/%s", pid);
 
     struct stat procStat;
+    /*If the directory existist display
+    retrieve its info*/
     if (stat(procPath, &procStat) == 0)
     {
         printf("PID: %s\n", pid);
 
+        /*Display the single-character state information about the process.
+        This information is found in the stat file in the process’s directory,
+         by looking at the third (“state”) field.*/
         if (flags.s)
         {
             char statusPath[271];
-            // check
+            /*Opens the status file reads through, looks for
+            lines starting with state. If it finds the first instance,
+            print the line where it was found.*/
             snprintf(statusPath, sizeof(statusPath), "%s/status", procPath);
-            /*We are now in and reading*/
             FILE *statusFile = fopen(statusPath, "r");
             if (statusFile)
             {
-                char line[264];
-                /*Read through each line if the first 6 charaters
-                start with "State:" then print the line its at.*/
+                char line[269];
+                /*Opens the /stat file, read line by line,
+                split it by spaces count the spaces so that you know
+                which index the token is at. if the U flag isn't present
+                print the user time where the token was found.*/
                 while (fgets(line, sizeof(line), statusFile))
                 {
                     if (strncmp(line, "State:", 6) == 0)
@@ -125,9 +144,7 @@ void displayProcInfo(const char *pid, struct Flags flags)
             }
         }
 
-        /*Runs the logic for the U and S flags*/
         char statPath[269];
-        // Check
         snprintf(statPath, sizeof(statPath), "%s/stat", procPath);
         FILE *statFile = fopen(statPath, "r");
         if (statFile)
@@ -135,31 +152,28 @@ void displayProcInfo(const char *pid, struct Flags flags)
             char line[256];
             if (fgets(line, sizeof(line), statFile))
             {
-                /*Split line by token, count keeps track of the position of token.*/
                 char *token = strtok(line, " ");
                 int count = 1;
                 while (token)
                 {
-                    if (!flags.U)
+                    if (!flags.U && count == 14)
                     {
                         printf("User Time: %s\n", token);
                     }
-                    else if (flags.S)
+                    else if (flags.S && count == 15)
                     {
                         printf("System Time: %s\n", token);
                     }
                     token = strtok(NULL, " ");
                     count++;
                 }
+                fclose(statFile);
             }
-            fclose(statFile);
         }
 
-        // Tracks the v flag
         if (flags.v)
         {
             char statmPath[271];
-            // Check
             snprintf(statmPath, sizeof(statmPath), "%s/statm", procPath);
             FILE *statmFile = fopen(statmPath, "r");
             if (statmFile)
@@ -167,9 +181,6 @@ void displayProcInfo(const char *pid, struct Flags flags)
                 char line[256];
                 if (fgets(line, sizeof(line), statmFile))
                 {
-                    /*Splits line by space " " into token, when the first
-                    space is found print the string following where the
-                    token was found.*/
                     char *token = strtok(line, " ");
                     if (token)
                     {
@@ -180,7 +191,6 @@ void displayProcInfo(const char *pid, struct Flags flags)
             }
         }
 
-        // Handles the c flagq
         if (flags.c)
         {
             char cmdlinePath[272];
