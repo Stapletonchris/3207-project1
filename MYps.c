@@ -16,7 +16,7 @@ including their state, user time, system time, virtual memory,
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "readproc.h"
+// #include "readproc.h"
 
 // Structure to hold command-line flags
 struct Flags
@@ -64,7 +64,6 @@ int main(int argc, char *argv[])
             break;
         default:
             fprintf(stderr, "Usage: %s -p PID -s -U -S -v -c\n", argv[0]);
-            // readproc();
             exit(0);
         }
     }
@@ -73,9 +72,7 @@ int main(int argc, char *argv[])
     if (!flags.p && !flags.s && !flags.U && !flags.S && !flags.c && !flags.v)
     {
         readproc();
-        char currentUID[32];
-        snprintf(currentUID, sizeof(currentUID), "%d", getuid());
-        DIR *procDir = opendir("/proc");
+        DIR *procDir = opendir("."); // Open the current working directory
         if (procDir)
         {
             struct dirent *entry;
@@ -90,7 +87,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            perror("procDir could not be opened.");
+            perror("Current directory could not be opened.");
         }
     }
     else if (flags.p)
