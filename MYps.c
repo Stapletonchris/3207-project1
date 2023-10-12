@@ -37,10 +37,12 @@ int main(int argc, char *argv[])
 
     char *path = NULL;
     int opt;
+    int noFlag = 1; // Flag to check if a flag has been specified
 
     // Parse through the command line and react to the flags accordingly.
     while ((opt = getopt(argc, argv, "p:sUSvc")) != -1)
     {
+        noFlag = 0; // Flags were specified
         switch (opt)
         {
         case 'p':
@@ -69,12 +71,12 @@ int main(int argc, char *argv[])
     }
 
     // If no options are provided, display information for all processes of the current user
-    if (!flags.p && !flags.s && !flags.U && !flags.S && !flags.c && !flags.v)
+    if (noFlag || (!flags.p && !flags.s && !flags.U && !flags.S && !flags.c && !flags.v))
     {
         // readproc();
         char currentUID[32];
         snprintf(currentUID, sizeof(currentUID), "%d", getuid());
-        DIR *procDir = opendir("/proc");
+        DIR *procDir = opendir(".");
         if (procDir)
         {
             struct dirent *entry;
